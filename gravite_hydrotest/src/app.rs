@@ -1,9 +1,11 @@
+use crate::comm::serial::SerialHandle;
 use crate::config::AppConfig;
 use crate::gui::builder::GroupBuilder;
 use crate::gui::pages::actuators::ActuatorsPage;
+use crate::gui::pages::comm_port::{ConnectionState, SerialAction};
 use crate::gui::pages::procedures::ProceduresPage;
 use crate::gui::composite::{Component, ButtonState};
-use crate::comm::{CommHandle, ToMcu, FromMcu};
+use crate::comm::states::{ToMcu, FromMcu};
 
 #[derive(PartialEq)]
 enum Page {
@@ -17,7 +19,7 @@ pub struct App {
     current_page: Page,
     actuators: ActuatorsPage,
     procedures: ProceduresPage,
-    comm: Option<CommHandle>
+    comm: ConnectionState,
 }
 
 impl App {
@@ -25,35 +27,64 @@ impl App {
         Self { current_page: Page::Actuators, actuators: ActuatorsPage { 
             root: GroupBuilder::build_from_cfg(&config) }, 
             procedures: ProceduresPage::new(), 
-            comm: None }
+            comm: ConnectionState::new(), }
+    }
+
+    fn try_connect(&mut self, port: &str, baud: u32) {
+        let handle = SerialHandle::new(port, baud);
+        match handle.connect() {
+            Ok(connected) => {
+                self.comm = ConnectionState::Connected { handle: connected };
+            }
+            Err(e) => {
+                if let ConnectionState::Disconnected { last_error, .. } = &mut self.comm {
+                    *last_error = Some(e.to_string());
+                }
+            }
+        }
+    }
+
+    fn try_disconnect(&mut self) {
+        if let ConnectionState::Connected { handle } = std::mem::replace(&mut self.comm, ConnectionState::new()) {
+            self.actuators.root.reset_status();
+            self.comm = ConnectionState::Disconnected { handle: handle.disconnect(), ports: vec![], selected: 0, baud_rate: 115200, last_error: None };
+        }
     }
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
 
-        if let Some(comm) = &self.comm {
-            while let Ok(msg) = comm.rx.try_recv() {
-                match msg {
-                    FromMcu::Echo(code, active) => {
-                        let state = if active {
-                            ButtonState::Active
-                        } else {
-                            ButtonState::Inactive
-                        };
-                        self.actuators.root.update_state(code, state);
-                    }
-                    _ => {}
+        let messages: Vec<FromMcu> = if let ConnectionState::Connected { handle } = &self.comm {
+            std::iter::from_fn(|| handle.try_recv()).collect()
+        } else {
+            vec![]
+        };
+
+        let mut should_disconnect = false;
+
+        for msg in messages {
+            match msg {
+                FromMcu::Echo(code) => {
+                    self.actuators.root.update_state(code);
                 }
+                FromMcu::Disconnected => {
+                    should_disconnect = true;
+                }
+                _ => {}
             }
+        }
+
+        if should_disconnect {
+            self.try_disconnect();
         }
 
         egui::TopBottomPanel::top("nav").show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.current_page, Page::Actuators, "Aktuatory");
-                ui.selectable_value(&mut self.current_page, Page::Procedures, "Procedury");
-                ui.selectable_value(&mut self.current_page, Page::Programming, "Programowanie");
-                ui.selectable_value(&mut self.current_page, Page::SerialPortConnection, "Port szeregowy");
+                ui.selectable_value(&mut self.current_page, Page::Actuators, "Actuators");
+                ui.selectable_value(&mut self.current_page, Page::Procedures, "Procedures");
+                ui.selectable_value(&mut self.current_page, Page::Programming, "Flash memory");
+                ui.selectable_value(&mut self.current_page, Page::SerialPortConnection, "Serial port");
             });
         });
 
@@ -61,13 +92,24 @@ impl eframe::App for App {
             match self.current_page {
                 Page::Actuators => {
                     let clicked = self.actuators.show(ui);
-                    if let Some(comm) = &self.comm {
+                    if let ConnectionState::Connected { handle } = &self.comm {
                         for code in clicked {
-                            let _ = comm.tx.send(ToMcu::TogglePeripheral(code));
+                            let _ = handle.send(ToMcu::TogglePeripheral(code));
                         }
                     }
                 }
                 Page::Procedures => { self.procedures.show(ui); }
+                Page::SerialPortConnection => {
+                    match self.comm.show(ui) {
+                        SerialAction::Connect { port, baud_rate } => {
+                            self.try_connect(&port, baud_rate);
+                        }
+                        SerialAction::Disconnect => {
+                            self.try_disconnect();
+                        }
+                        SerialAction::None => {}
+                    }
+                }
                 _ => {}
             }
         });
