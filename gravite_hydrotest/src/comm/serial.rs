@@ -34,16 +34,22 @@ fn spawn_comm_thread(port_name: String, baud_rate: u32, mut port: Box<dyn Serial
 
         loop {
             // sending data to MCU
-            while let Ok(msg) = rx_from_gui.try_recv() {
-                let byte = match msg {
-                    ToMcu::TogglePeripheral(code) => code,
-                    ToMcu::FlashFirmware => 0xFF,
-                    ToMcu::RunProcedure(code) => code,
-                };
-                if port.write_all(&[byte]).is_err() {
-                    let _ = tx_to_gui.send(FromMcu::Disconnected);
+            match rx_from_gui.try_recv() {
+                Ok(msg) => {
+                    let byte = match msg {
+                        ToMcu::FlashFirmware => 0xFF,
+                        ToMcu::TogglePeripheral(code) => code,
+                        ToMcu::RunProcedure(code) => code,
+                    };
+                    if port.write_all(&[byte]).is_err() {
+                        let _ = tx_to_gui.send(FromMcu::Disconnected);
+                        return;
+                    }
+                }
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
                     return;
                 }
+                Err(std::sync::mpsc::TryRecvError::Empty) => {}
             }
 
             // receiving data from MCU

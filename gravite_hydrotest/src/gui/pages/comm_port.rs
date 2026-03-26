@@ -1,5 +1,5 @@
 use eframe::egui;
-use crate::comm::serial::{Connected, Disconnected, SerialHandle, SerialError};
+use crate::comm::serial::{Connected, Disconnected, SerialHandle};
 
 
 pub enum SerialAction {
@@ -10,7 +10,6 @@ pub enum SerialAction {
 
 pub enum ConnectionState {
     Disconnected {
-        handle: SerialHandle<Disconnected>,
         ports: Vec<String>,
         selected: usize,
         baud_rate: u32,
@@ -31,20 +30,12 @@ fn list_ports() -> Vec<String> {
 
 impl ConnectionState {
     pub fn new() -> Self {
-        let ports = list_ports();
-        ConnectionState::Disconnected { 
-            handle: SerialHandle::new(
-                ports.first().map(|s| s.as_str()).unwrap_or(""), 
-                115200), 
-                ports, 
-                selected: 0, 
-                baud_rate: 115200, 
-                last_error: None }
+        ConnectionState::Disconnected { ports: list_ports(), selected: 0, baud_rate: 115200, last_error: None }
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui) -> SerialAction {
         match self {
-            ConnectionState::Disconnected { handle, ports, selected, baud_rate, last_error } => {
+            ConnectionState::Disconnected { ports, selected, baud_rate, last_error } => {
                 ui.heading("Serial Port");
                 ui.separator();
 
@@ -83,7 +74,7 @@ impl ConnectionState {
 
                 if ui.button("Connect").clicked() {
                     let port = ports.get(*selected).cloned().unwrap_or_default();
-                    return SerialAction::Connect { port, baud_rate: *baud_rate };
+                    return SerialAction::Connect { port: port.clone(), baud_rate: *baud_rate };
                 }
 
                 SerialAction::None

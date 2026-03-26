@@ -1,3 +1,5 @@
+use std::process::Child;
+
 use eframe::egui;
 
 // konstrukcja przycisków
@@ -43,9 +45,15 @@ impl ButtonModule {
 
 // moduł skupiający przyciski
 
+pub enum LayouType {
+    Vertical,
+    Horizontal,
+}
+
 pub struct GroupModule {
     pub name: String,
-    pub children: Vec<Box<dyn Component>>
+    pub children: Vec<Box<dyn Component>>,
+    pub layout: LayouType,
 }
 
 pub trait Component {
@@ -88,9 +96,23 @@ impl Component for GroupModule {
             ui.group(|ui| {
                 ui.label(egui::RichText::new(&self.name).strong());
                 ui.separator();
-                for child in &mut self.children {
-                    let codes = child.show(ui);
-                    clicked.extend(codes);
+                
+                match self.layout {
+                    LayouType::Vertical => {
+                        ui.vertical(|ui| {
+                            for child in &mut self.children {
+                                let codes = child.show(ui);
+                                clicked.extend(codes);
+                            }
+                        })
+                    }
+                    LayouType::Horizontal => {
+                        ui.horizontal_wrapped(|ui| {
+                            for child in &mut self.children {
+                                clicked.extend(child.show(ui));
+                            }
+                        })
+                    }
                 }
             });
         });

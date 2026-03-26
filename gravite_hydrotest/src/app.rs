@@ -1,7 +1,9 @@
+use std::clone;
+
 use crate::comm::serial::SerialHandle;
 use crate::config::AppConfig;
 use crate::gui::builder::GroupBuilder;
-use crate::gui::pages::actuators::ActuatorsPage;
+use crate::gui::pages::actuators::{self, ActuatorsPage};
 use crate::gui::pages::comm_port::{ConnectionState, SerialAction};
 use crate::gui::pages::procedures::ProceduresPage;
 use crate::gui::composite::{Component, ButtonState};
@@ -45,9 +47,20 @@ impl App {
     }
 
     fn try_disconnect(&mut self) {
-        if let ConnectionState::Connected { handle } = std::mem::replace(&mut self.comm, ConnectionState::new()) {
+        let old_state = std::mem::replace(&mut self.comm, ConnectionState::new());
+
+        if let ConnectionState::Connected { handle } = old_state {
+            let disconnected_port_name = handle.port_name.clone();
+
             self.actuators.root.reset_status();
-            self.comm = ConnectionState::Disconnected { handle: handle.disconnect(), ports: vec![], selected: 0, baud_rate: 115200, last_error: None };
+            
+            let _ = handle.disconnect();
+
+            if let ConnectionState::Disconnected { ports, selected, .. } = &mut self.comm {
+                if let Some(pos) = ports.iter().position(|p| p == &disconnected_port_name) {
+                    *selected = pos;
+                }
+            }
         }
     }
 }
