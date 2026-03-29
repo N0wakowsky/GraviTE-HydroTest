@@ -1,5 +1,3 @@
-use std::any::Any;
-use std::ffi::os_str::Display;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::Duration;
@@ -9,7 +7,6 @@ use super::states::{FromMcu, ToMcu};
 
 pub struct Disconnected;
 pub struct Connected;
-pub struct Connecting;
 
 pub enum SerialError {
     Open(serialport::Error),

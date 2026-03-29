@@ -1,5 +1,5 @@
 [package]
-name = "gravite_hydrotest"
+name = "hydro"
 version = "0.1.0"
 edition = "2024"
 

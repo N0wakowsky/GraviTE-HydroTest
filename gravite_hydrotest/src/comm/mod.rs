@@ -1,2 +1,2 @@
-pub mod states;
 pub mod serial;
+pub mod states;

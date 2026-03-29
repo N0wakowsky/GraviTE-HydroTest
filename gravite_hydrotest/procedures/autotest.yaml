@@ -1,0 +1,19 @@
+name: "Autotest"
+config:
+  loop: true
+  iterations: 10
+phases:
+  - name: "Napełnianie"
+    duration_sec: 30
+    actuators:
+      - name: "Zawór 1"
+        state: 1
+      - name: "Pompa 1"
+        state: 0
+  - name: "Opróżnianie"
+    duration_sec: 15
+    actuators:
+      - name: "Zawór 1"
+        state: 0
+      - name: "Pompa 1"
+        state: 1
