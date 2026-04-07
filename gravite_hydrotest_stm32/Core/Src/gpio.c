@@ -1,0 +1,236 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file    gpio.c
+  * @brief   This file provides code for the configuration
+  *          of all used GPIO pins.
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2026 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
+#include "gpio.h"
+
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/*----------------------------------------------------------------------------*/
+/* Configure GPIO                                                             */
+/*----------------------------------------------------------------------------*/
+/* USER CODE BEGIN 1 */
+
+/* USER CODE END 1 */
+
+/** Configure pins as
+        * Analog
+        * Input
+        * Output
+        * EVENT_OUT
+        * EXTI
+        * Free pins are configured automatically as Analog (this feature is enabled through
+        * the Code Generation settings)
+*/
+void MX_GPIO_Init(void)
+{
+
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, ValveGate4_Pin|ValveGate3_Pin|EN_PUMP1_Pin|ETH_SPI_RST_Pin
+                          |ETH_SPI_INT_Pin|ETH_SPI_CS_Pin|USER_LED1_Pin|USER_LED2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOF, ValveGate1_Pin|ValveGate2_Pin|VALVE_PWR_EN1_Pin|EN_PUMP3_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOG, EN_PUMP2_Pin|EN_PUMP7_Pin|EN_PUMP8_Pin|EN_PUMP_PWR_Pin
+                          |ValveGate12_Pin|ValveGate11_Pin|ValveGate6_Pin|ValveGate5_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, ValveGate7_Pin|ValveGate8_Pin|USER_GPIO1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, EN_PUMP4_Pin|EN_PUMP5_Pin|EN_PUMP6_Pin|mem__wp_Pin
+                          |mem__ce_Pin|mem__hold_Pin|PIEZO_PWR_EN_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, VALVE_PWR_EN2_Pin|ValveGate10_Pin|ValveGate9_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : ValveGate4_Pin ValveGate3_Pin EN_PUMP1_Pin ETH_SPI_RST_Pin
+                           ETH_SPI_INT_Pin ETH_SPI_CS_Pin USER_LED1_Pin USER_LED2_Pin */
+  GPIO_InitStruct.Pin = ValveGate4_Pin|ValveGate3_Pin|EN_PUMP1_Pin|ETH_SPI_RST_Pin
+                          |ETH_SPI_INT_Pin|ETH_SPI_CS_Pin|USER_LED1_Pin|USER_LED2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PE4 PE5 PE6 PE11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PC13 PC15 PC0 PC1
+                           PC4 PC5 PC6 PC7
+                           PC8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_15|GPIO_PIN_0|GPIO_PIN_1
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7
+                          |GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : VALVE_FAULT1_Pin FAULT_5V_Pin PGOOD_5V_Pin PUMP_FAULT3_Pin */
+  GPIO_InitStruct.Pin = VALVE_FAULT1_Pin|FAULT_5V_Pin|PGOOD_5V_Pin|PUMP_FAULT3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : ValveGate1_Pin ValveGate2_Pin VALVE_PWR_EN1_Pin EN_PUMP3_Pin */
+  GPIO_InitStruct.Pin = ValveGate1_Pin|ValveGate2_Pin|VALVE_PWR_EN1_Pin|EN_PUMP3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : FAULT_12V_Pin */
+  GPIO_InitStruct.Pin = FAULT_12V_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(FAULT_12V_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PGOOD_12V_Pin */
+  GPIO_InitStruct.Pin = PGOOD_12V_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(PGOOD_12V_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PF10 PF11 PF12 PF13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA0 PA1 PA2 PA3
+                           PA4 PA5 PA7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB0 PB1 PB10 PB11
+                           PB12 PB13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_10|GPIO_PIN_11
+                          |GPIO_PIN_12|GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BOOT1_Pin */
+  GPIO_InitStruct.Pin = BOOT1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BOOT1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : EN_PUMP2_Pin EN_PUMP7_Pin EN_PUMP8_Pin EN_PUMP_PWR_Pin
+                           ValveGate12_Pin ValveGate11_Pin ValveGate6_Pin ValveGate5_Pin */
+  GPIO_InitStruct.Pin = EN_PUMP2_Pin|EN_PUMP7_Pin|EN_PUMP8_Pin|EN_PUMP_PWR_Pin
+                          |ValveGate12_Pin|ValveGate11_Pin|ValveGate6_Pin|ValveGate5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PUMP_FAULT2_Pin PUMP_FAULT7_Pin PUMP_FAULT8_Pin PUMP_PWR_GOOD_Pin */
+  GPIO_InitStruct.Pin = PUMP_FAULT2_Pin|PUMP_FAULT7_Pin|PUMP_FAULT8_Pin|PUMP_PWR_GOOD_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PUMP_FAULT1_Pin */
+  GPIO_InitStruct.Pin = PUMP_FAULT1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(PUMP_FAULT1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : ValveGate7_Pin ValveGate8_Pin USER_GPIO1_Pin */
+  GPIO_InitStruct.Pin = ValveGate7_Pin|ValveGate8_Pin|USER_GPIO1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PUMP_FAULT4_Pin PUMP_FAULT5_Pin PUMP_FAULT6_Pin */
+  GPIO_InitStruct.Pin = PUMP_FAULT4_Pin|PUMP_FAULT5_Pin|PUMP_FAULT6_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : EN_PUMP4_Pin EN_PUMP5_Pin EN_PUMP6_Pin mem__wp_Pin
+                           mem__ce_Pin mem__hold_Pin PIEZO_PWR_EN_Pin */
+  GPIO_InitStruct.Pin = EN_PUMP4_Pin|EN_PUMP5_Pin|EN_PUMP6_Pin|mem__wp_Pin
+                          |mem__ce_Pin|mem__hold_Pin|PIEZO_PWR_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PD14 PD15 PD3 PD5
+                           PD6 PD7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_3|GPIO_PIN_5
+                          |GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PG8 PG13 PG14 PG15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : VALVE_PWR_EN2_Pin ValveGate10_Pin ValveGate9_Pin */
+  GPIO_InitStruct.Pin = VALVE_PWR_EN2_Pin|ValveGate10_Pin|ValveGate9_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : VALVE_FAULT2_Pin */
+  GPIO_InitStruct.Pin = VALVE_FAULT2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(VALVE_FAULT2_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+}
+
+/* USER CODE BEGIN 2 */
+
+/* USER CODE END 2 */
