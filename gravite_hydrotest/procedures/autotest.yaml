@@ -1,19 +1,16 @@
+# all peripherals that are not configred as active in given phase are automaticaly inactive
+# IT IS NECESSERY TO ACTUATORS HAVE THE EXACT SAME NAMES AS SPECIFIED IN THE CONFIG.YAML FILE!
+
 name: "Autotest"
 config:
   loop: true
   iterations: 10
 phases:
   - name: "Napełnianie"
-    duration_sec: 30
+    duration_sec: 15
     actuators:
-      - name: "Zawór 1"
-        state: 1
-      - name: "Pompa 1"
-        state: 0
+      - name: "D2-W"
   - name: "Opróżnianie"
     duration_sec: 15
     actuators:
-      - name: "Zawór 1"
-        state: 0
-      - name: "Pompa 1"
-        state: 1
+      - name: "P1"

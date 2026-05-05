@@ -1,11 +1,13 @@
 [package]
-name = "hydro"
+name = "GraviTEHydroTest"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 eframe = "0.31"
 egui = "0.31"
-serde = {version = "1", features = ["derive"]}
-serde_yaml = "0.9"
-serialport = "4"
+serde_yaml = "0.9.34"
+serde = { version = "1", features = ["derive"] }
+serialport = "4.3"
+probe-rs = "0.24"
+rfd = "0.14"

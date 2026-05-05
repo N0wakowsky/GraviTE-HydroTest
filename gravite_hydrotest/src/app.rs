@@ -1,126 +1,112 @@
-use crate::{config::AppConfig, gui::{actuators::actuators_page::ActuatorsPage, procedures::{procedures_logic::ProcedureRunner, procedures_page::ProcedurePage}, serial_port::serial_port_logic::ConnectionState}};
-use crate::gui::serial_port::serial_port_page::SerialPortPage;
-use crate::gui::components::AppMessage;
-use crate::config::ActuatorsRegister;
-use crate::comm::states::FromMcu;
+use std::collections::HashMap;
+use std::sync::mpsc;
+use crate::gui::components::AppState;
 
-#[derive(PartialEq)]
-enum Page {
-    Actuators,
-    Procedures,
-    Programming,
-    SerialPortPage,
-}
+use crate::gui::pages::serial_control::SerialStatus;
+use crate::gui::pages::memory_flash::FlashStatus;
+use crate::gui::pages::proc_control::ProcedureStatus;
+
+use crate::{config::{ActuatorsRegister, AppConfig}, gui::{components::{PageFactory, PageTrait, PageType}}};
+
+use crate::gui::pages::serial_control::spawn_serial_thread;
+use crate::gui::pages::memory_flash::spawn_flash_thread;
+use crate::gui::pages::proc_control::spawn_proc_thread;
+
+use crate::gui::components::PageContext;
+
 
 pub struct App {
-    current_page: Page,
-    register: ActuatorsRegister,
-    actuators: ActuatorsPage,
-    serial_port: SerialPortPage,
-    procedures: ProcedurePage,
-    procedures_logic: ProcedureRunner,
-    config: AppConfig,
+    current_page_type: PageType,
+    pages: HashMap<PageType, Box<dyn PageTrait>>,
+    state: AppState,
+    
+    rx_ser_stat: mpsc::Receiver<SerialStatus>,
+    rx_fl_stat: mpsc::Receiver<FlashStatus>,
+    rx_proc_stat: mpsc::Receiver<ProcedureStatus>,
 }
 
 impl App {
-    pub fn new(config: AppConfig) -> Self {
-        let register = ActuatorsRegister::from_config(&config);
+    pub fn new(config: AppConfig, ctx: egui::Context) -> Self {
+        let act_register = ActuatorsRegister::from_config(&config);
 
-        Self { 
-            current_page: Page::Actuators, 
-            actuators: ActuatorsPage::new(&config),
-            serial_port: SerialPortPage::new(),
-            procedures: ProcedurePage::new(&config),
-            procedures_logic: ProcedureRunner::new(),
-            register,
-            config,
-        }
-    }
-    
-    pub fn handle_message(&mut self, msg: AppMessage) {
-        match msg {
-            AppMessage::ConnectSerial { port, baud } => {
-                let _ = self.serial_port.state.try_connect(&port, baud);
-            }
-            AppMessage::ToggleActuator(code) => {
-                if let ConnectionState::Connected { handle } = &self.serial_port.state {
-                    // Wysyłamy komendę do MCU
-                    let _ = handle.send(crate::comm::states::ToMcu::TogglePeripheral(code));
-                }
-            }
-            AppMessage::DisconnectSerial => {
-                self.serial_port.state.try_disconnect();
-                self.register.reset_all();
-                self.actuators.root.reset_status();
-            }
-            AppMessage::StartProcedure(proc_name) => {
-                // Znajdź konfigurację procedury i wystartuj silnik
-                if let Some(proc_config) = self.config.procedures.iter().find(|p| p.name == proc_name) {
-                    self.procedures_logic.start(proc_config.clone());
-                }
-            }
-            AppMessage::AbortProcedure => {
-                self.procedures_logic.stop();
-            }
+        let (tx_ser_cmd, rx_ser_cmd) = mpsc::channel();
+        let (tx_ser_stat, rx_ser_stat) = mpsc::channel();
+        spawn_serial_thread(rx_ser_cmd, tx_ser_stat, act_register.clone(), ctx.clone());
+
+        let (tx_fl_cmd, rx_fl_cmd) = mpsc::channel();
+        let (tx_fl_stat, rx_fl_stat) = mpsc::channel();
+        spawn_flash_thread(rx_fl_cmd, tx_fl_stat, ctx.clone());
+
+        let (tx_proc_cmd, rx_proc_cmd) = mpsc::channel();
+        let (tx_proc_stat, rx_proc_stat) = mpsc::channel();
+        spawn_proc_thread(rx_proc_cmd, tx_proc_stat, tx_ser_cmd.clone(), config.clone(), ctx.clone(), act_register.clone());
+
+        let state = AppState {
+            serial_status: SerialStatus::Disconnected,
+            flash_status: FlashStatus::Idle,
+            proc_state: ProcedureStatus::Idle,
+            available_ports: vec![],
+        };
+
+        let page_ctx = PageContext {
+            config: config.clone(),
+            act_register,
+            tx_serial: tx_ser_cmd,
+            tx_flash: tx_fl_cmd,
+            tx_proc: tx_proc_cmd,
+        };
+
+        let act_page = PageFactory::create(PageType::Actuators, &page_ctx);
+        let serial_page = PageFactory::create(PageType::SerialPort, &page_ctx);
+        let flash_page = PageFactory::create(PageType::Flash, &page_ctx);
+        let proc_page = PageFactory::create(PageType::Procedures, &page_ctx);
+
+        let mut pages: HashMap<PageType, Box<dyn PageTrait>> = HashMap::new();
+        pages.insert(PageType::Actuators, act_page);
+        pages.insert(PageType::SerialPort,  serial_page);
+        pages.insert(PageType::Flash, flash_page);
+        pages.insert(PageType::Procedures, proc_page);
+
+        Self {
+            current_page_type: PageType::Actuators,
+            pages,
+            state,
+            rx_ser_stat,
+            rx_fl_stat,
+            rx_proc_stat,
         }
     }
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        
-        // 1. Odbieranie komunikatów z UART i synchronizacja ze "Źródłem Prawdy"
-        let mut messages = Vec::new();
-        if let ConnectionState::Connected { handle } = &self.serial_port.state {
-            while let Some(msg) = handle.try_recv() {
-                messages.push(msg);
-            }
-        }
-
-        // 2. Teraz przetwórz wiadomości (handle już nie jest pożyczone)
-        for msg in messages {
+        while let Ok(msg) = self.rx_ser_stat.try_recv() {
             match msg {
-                FromMcu::Echo(code) => {
-                    let new_state = self.register.toggle_state(code);
-                    self.actuators.root.set_status_by_code(code, new_state);
-                }
-                FromMcu::Disconnected => {
-                    self.handle_message(AppMessage::DisconnectSerial);
-                }
+                SerialStatus::PortList(p) => self.state.available_ports = p,
+                status => self.state.serial_status = status,
             }
         }
+        while let Ok(status) = self.rx_fl_stat.try_recv() { self.state.flash_status = status; }
+        while let Ok(status) = self.rx_proc_stat.try_recv() { self.state.proc_state = status; }
 
-        if self.procedures_logic.is_running() {
-            let toggle_commands = self.procedures_logic.tick(&self.register);
-            
-            if let ConnectionState::Connected { handle } = &self.serial_port.state {
-                for code in toggle_commands {
-                    let _ = handle.send(crate::comm::states::ToMcu::TogglePeripheral(code));
-                }
+        egui::SidePanel::left("menu").show(ctx, |ui| {
+            if ui.selectable_label(self.current_page_type == PageType::Actuators, "Actuators").clicked() {
+                self.current_page_type = PageType::Actuators;
             }
-            ctx.request_repaint(); 
-        }
-
-        // Toolbar
-        egui::TopBottomPanel::top("nav").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.current_page, Page::Actuators, "Actuators");
-                ui.selectable_value(&mut self.current_page, Page::SerialPortPage, "Serial Port");
-                ui.selectable_value(&mut self.current_page, Page::Procedures, "Procedures");
-            });
+            if ui.selectable_label(self.current_page_type == PageType::Procedures, "Procedures").clicked() {
+                self.current_page_type = PageType::Procedures;
+            }
+            if ui.selectable_label(self.current_page_type == PageType::SerialPort, "Serial Port").clicked() {
+                self.current_page_type = PageType::SerialPort;
+            }
+            if ui.selectable_label(self.current_page_type == PageType::Flash, "Flash").clicked() {
+                self.current_page_type = PageType::Flash;
+            }
         });
 
-        //Main panel
         egui::CentralPanel::default().show(ctx, |ui| {
-            let maybe_msg = match self.current_page {
-                Page::Actuators => self.actuators.show(ui),
-                Page::SerialPortPage => SerialPortPage::show(ui, &mut self.serial_port.state),
-                Page::Procedures => self.procedures.show(ui),
-                _ => None,
-            };
-
-            if let Some(msg) = maybe_msg {
-                self.handle_message(msg);
+            if let Some(page) = self.pages.get_mut(&self.current_page_type) {
+                page.update(ctx, ui, &self.state);
             }
         });
     }

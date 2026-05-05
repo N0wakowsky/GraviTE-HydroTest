@@ -42,7 +42,7 @@ typedef struct {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MAX_PERIPHERAL_CODE 0x14
+#define MAX_PERIPHERAL_CODE 0x18
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -66,20 +66,24 @@ const Act_Config peripheral_map[] = {
     {ValveGate6_GPIO_Port, ValveGate6_Pin}, // 0x06
     {ValveGate7_GPIO_Port, ValveGate7_Pin}, // 0x07
     {ValveGate8_GPIO_Port, ValveGate8_Pin}, // 0x08
+    {ValveGate9_GPIO_Port, ValveGate9_Pin}, // 0x09
+    {ValveGate10_GPIO_Port, ValveGate10_Pin}, // 0x0A
+    {ValveGate11_GPIO_Port, ValveGate11_Pin}, // 0x0B
+    {ValveGate12_GPIO_Port, ValveGate12_Pin}, // 0x0C
     // Pizeo pumps
-    {NULL, 0}, // 0x09
-    {NULL, 0}, // 0x0A
-    {NULL, 0}, // 0x0B
-    {NULL, 0}, // 0x0C
+    {NULL, 0}, // 0x0D
+    {NULL, 0}, // 0x0E
+    {NULL, 0}, // 0x0F
+    {NULL, 0}, // 0x10
     // Peristaltic pumps
-    {EN_PUMP1_GPIO_Port,  EN_PUMP1_Pin},  // 0x0D
-    {EN_PUMP2_GPIO_Port,  EN_PUMP2_Pin},  // 0x0E
-    {EN_PUMP3_GPIO_Port,  EN_PUMP3_Pin},  // 0x0F
-    {EN_PUMP4_GPIO_Port,  EN_PUMP4_Pin},  // 0x10
-    {EN_PUMP5_GPIO_Port,  EN_PUMP5_Pin},  // 0x11
-    {EN_PUMP6_GPIO_Port,  EN_PUMP6_Pin},  // 0x12
-    {EN_PUMP7_GPIO_Port,  EN_PUMP7_Pin},  // 0x13
-    {EN_PUMP8_GPIO_Port,  EN_PUMP8_Pin},  // 0x14
+    {EN_PUMP1_GPIO_Port,  EN_PUMP1_Pin},  // 0x11
+    {EN_PUMP2_GPIO_Port,  EN_PUMP2_Pin},  // 0x12
+    {EN_PUMP3_GPIO_Port,  EN_PUMP3_Pin},  // 0x13
+    {EN_PUMP4_GPIO_Port,  EN_PUMP4_Pin},  // 0x14
+    {EN_PUMP5_GPIO_Port,  EN_PUMP5_Pin},  // 0x15
+    {EN_PUMP6_GPIO_Port,  EN_PUMP6_Pin},  // 0x16
+    {EN_PUMP7_GPIO_Port,  EN_PUMP7_Pin},  // 0x17
+    {EN_PUMP8_GPIO_Port,  EN_PUMP8_Pin},  // 0x18
 };
 /* USER CODE END PV */
 

@@ -6,11 +6,12 @@ Config file is specified to derive:
         - contructor: list of modules (ButtonModules) containing lists of buttons (Actuator) with its coresponding name, code and state
 
 */
-use std::{fs::read_to_string, path::Path, sync::Arc};
+use std::{fs::read_to_string, sync::{Arc, mpsc::Sender}};
 use egui::mutex::Mutex;
-use serde::Deserialize;
-use serde::Deserializer;
 
+use serde::Deserialize;
+
+use crate::gui::pages::serial_control::SerialCommand;
 
 // Configuration read for page setup and build
 
@@ -29,14 +30,14 @@ pub struct Actuator {
     pub is_active: bool,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct ActuatorsConfig {
     pub module: String,
     pub buttons: Vec<Actuator>,
 }
 
 // Top application config structure
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct AppConfig {
     #[serde(rename = "sections")]
     pub actuators: Vec<ActuatorsConfig>,
@@ -62,10 +63,9 @@ pub struct RunConfig {
 }
 
 #[derive(Deserialize, Clone, Debug)]
+#[allow(dead_code)]
 pub struct PhaseActuator {
     pub name: String,
-    #[serde(deserialize_with = "AppConfig::bool_from_int_or_bool")]
-    pub state: bool,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -76,43 +76,26 @@ pub struct Phase {
 }
 
 
-// Error handling enum
-#[derive(Debug)]
-pub enum ConfigError {
-    Io(std::io::Error),
-    Parse(serde_yaml::Error),
-}
-
-impl std::fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ConfigError::Io(e) => write!(f, "Error while reading file: {}", e),
-            ConfigError::Parse(e) => write!(f, "Error while parsing a config file {}", e),
-        }
-    }
-}
-
-
 
 impl AppConfig {
     pub fn new() -> Self {
         Self { actuators: Vec::new(), procedures: Vec::new() }
     }
 
-    pub fn load_act_config(&mut self, path: &Path) -> Result<(), ConfigError> {
-        let contents: String = read_to_string(path).map_err(ConfigError::Io)?;
-        let parsed: ActuatorsBuff = serde_yaml::from_str(&contents).map_err(ConfigError::Parse)?;
+    pub fn load_act_config<P: AsRef<std::path::Path>>(&mut self, path: P) -> Result<(), Box<dyn std::error::Error>> {
+        let contents: String = read_to_string(path)?;
+        let parsed: ActuatorsBuff = serde_yaml::from_str(&contents)?;
         self.actuators = parsed.actuators;
         Ok(())
     }
 
-    pub fn load_procedure_config(&mut self, dir_path: &Path) -> Result<(), ConfigError> {
-        if let Ok(entries) = std::fs::read_dir(dir_path) {
+    pub fn load_procedure_config<P: AsRef<std::path::Path>>(&mut self, path: P) -> Result<(), Box<dyn std::error::Error>> {
+        if let Ok(entries) = std::fs::read_dir(path) {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.extension().and_then(|s| s.to_str()) == Some("yaml") {
-                    let contents = read_to_string(&path).map_err(ConfigError::Io)?;
-                    let proc: ProceduresConfig = serde_yaml::from_str(&contents).map_err(ConfigError::Parse)?;
+                    let contents = read_to_string(&path)?;
+                    let proc: ProceduresConfig = serde_yaml::from_str(&contents)?;
                     
                     self.procedures.push(proc);
                 }
@@ -134,28 +117,11 @@ impl AppConfig {
             })
             .collect()
     }
-
-    fn bool_from_int_or_bool<'de, D>(deserializer: D) -> Result<bool, D::Error> where D: Deserializer<'de>, {
-        // Deklarujemy pomocniczy enum, który akceptuje różne typy z YAML
-        #[derive(Deserialize)]
-        #[serde(untagged)]
-        enum IntOrBool {
-            Int(i64),
-            Bool(bool),
-        }
-
-        match IntOrBool::deserialize(deserializer)? {
-            IntOrBool::Int(0) => Ok(false),
-            IntOrBool::Int(1) => Ok(true),
-            IntOrBool::Int(i) => Err(serde::de::Error::custom(format!("Oczekiwano 0 lub 1, otrzymano {}", i))),
-            IntOrBool::Bool(b) => Ok(b),
-        }
-    }
 }
 
 
 // Global structure for actuators states managing
-
+#[derive(Clone)]
 pub struct ActuatorsRegister {
     pub items: Arc<Mutex<Vec<Actuator>>>
 }
@@ -165,19 +131,30 @@ impl ActuatorsRegister {
         Self { items: Arc::new(Mutex::new(config.actuators_flat())) }
     }
 
-    pub fn toggle_state(&self, code: u8) -> bool {
+    pub fn toggle_state(&self, code: u8) {
         let mut items = self.items.lock();
         if let Some(actuator) = items.iter_mut().find(|a| a.code == code) {
             actuator.is_active = !actuator.is_active;
-            return actuator.is_active;
         }
-        false
     }
 
-    pub fn reset_all(&self) {
+    pub fn reset_all(&self, tx_serial: &Sender<SerialCommand>) {
         let mut items = self.items.lock();
         for item in items.iter_mut() {
-            item.is_active = false;
+            if item.is_active {
+                let _ = tx_serial.send(SerialCommand::TogglePeripheral(item.code));
+            }
+        }
+    }
+
+    pub fn set_active_by_name(&self, name: &String, tx_serial: &Sender<SerialCommand>) {
+        let code = {
+            let items = self.items.lock();
+            items.iter().find(|a| a.name == *name).map(|a| a.code)
+        };
+
+        if let Some(code) = code {
+            let _ = tx_serial.send(SerialCommand::TogglePeripheral(code));
         }
     }
 }
