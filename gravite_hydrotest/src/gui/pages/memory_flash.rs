@@ -88,6 +88,9 @@ pub fn spawn_flash_thread(
                     options
                 )?;
 
+                let mut core = session.core(0)?;
+                core.reset()?;
+
                 Ok(())
             }();
 
