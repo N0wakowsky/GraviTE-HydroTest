@@ -19,4 +19,5 @@ jobs:
       uses: swatinem/rust-cache@v2
 
     - name: Run Cargo Build (Debug)
+      working-directory: gravite_hydrotest
       run: cargo build
