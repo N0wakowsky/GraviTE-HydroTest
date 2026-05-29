@@ -1,0 +1,54 @@
+name: Continuous Deployment (CD)
+
+on:
+  push:
+    branches: [ "develop_release" ]
+
+jobs:
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: swatinem/rust-cache@v2
+
+    - name: Build Release Windows
+      working-directory: gravite_hydrotest
+      run: cargo build --release
+
+    - name: Upload Windows Binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-bin
+        path: gravite_hydrotest/target/release/GraviTEHydroTest.exe
+
+  package-release:
+    runs-on: ubuntu-latest
+    needs: [build-windows]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Prepare Package Directory
+      run: mkdir -p GraviTE_release
+
+    - name: Download Windows Binary
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-bin
+        path: ./GraviTE_release
+
+    - name: Copy STM32 ELF File
+      run: cp gravite_hydrotest_stm32/build/Debug/GraviTE_test.elf ./GraviTE_release/projekt_stm32.elf
+
+    - name: Copy Configuration and Procedures
+      run: |
+        cp config.yaml ./GraviTE_release/
+        cp -r procedures ./GraviTE_release/
+
+    - name: Upload Final Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: Release_pack
+        path: GraviTE_release/
