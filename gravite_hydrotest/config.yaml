@@ -1,30 +1,30 @@
 sections:
 - module: "Zawory"
-  buttons:
-    - name: "D2-M3"
-      code: 0x01
-    - name: "D2-W"
-      code: 0x02
-    - name: "S3-CC4"
-      code: 0x03
-    - name: "S3-CC3"
-      code: 0x04
-    - name: "S1-CC4"
-      code: 0x05
-    - name: "S1-CC3"
-      code: 0x06
-    - name: "D1-W"
-      code: 0x07
-    - name: "D1-M2"
-      code: 0x08
-    - name: "S2-CC1"
-      code: 0x09
-    - name: "S2-CC2"
-      code: 0x0A
+  buttons: 
     - name: "S1-CC1"
       code: 0x0B
     - name: "S1-CC2"
       code: 0x0C
+    - name: "S1-CC3"
+      code: 0x06
+    - name: "S1-CC4"
+      code: 0x05
+    - name: "S2-CC1"
+      code: 0x09
+    - name: "S2-CC2"
+      code: 0x0A
+    - name: "S3-CC3"
+      code: 0x04
+    - name: "S3-CC4"
+      code: 0x03
+    - name: "D1-W"
+      code: 0x07
+    - name: "D1-M2"
+      code: 0x08
+    - name: "D2-W"
+      code: 0x02
+    - name: "D2-M3"
+      code: 0x01
 
 - module: "Piezopompy"
   buttons:
@@ -38,18 +38,18 @@ sections:
       code: 0x10
 
 - module: "Pompy perystaltyczne"
-  buttons:
-    - name: "P6"
-      code: 0x11
-    - name: "P4"
-      code: 0x12
-    - name: "P3"
-      code: 0x13
-    - name: "P7"
-      code: 0x14
-    - name: "P2"
-      code: 0x15
+  buttons:    
     - name: "P1"
       code: 0x16
+    - name: "P2"
+      code: 0x15
+    - name: "P3"
+      code: 0x13
+    - name: "P4"
+      code: 0x12
     - name: "P5"
       code: 0x17
+    - name: "P6"
+      code: 0x11
+    - name: "P7"
+      code: 0x14
