@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/kanow/Documents/studia/MPiMS/GraviTE-HydroTest/gravite_hydrotest_stm32/build/Debug/cmake_install.cmake",
+		"C:/Users/kanow/Documents/studia/MPiMS/GraviTE-HydroTest/gravite_hydrotest_stm32/build/Debug/cmake/stm32cubemx/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
