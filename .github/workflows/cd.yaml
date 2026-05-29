@@ -44,8 +44,8 @@ jobs:
 
     - name: Copy Configuration and Procedures
       run: |
-        cp config.yaml ./GraviTE_release/
-        cp -r procedures ./GraviTE_release/
+        cp gravite_hydrotest/config.yaml ./GraviTE_release/
+        cp -r gravite_hydrotest/procedures ./GraviTE_release/
 
     - name: Upload Final Package
       uses: actions/upload-artifact@v4
