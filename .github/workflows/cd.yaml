@@ -4,6 +4,10 @@ on:
   push:
     branches: [ "develop_release" ]
 
+# KLUCZOWE: Dajemy skryptowi uprawnienia do tworzenia wydań (Releases)
+permissions:
+  contents: write
+
 jobs:
 
   build-windows:
@@ -50,8 +54,17 @@ jobs:
         cp gravite_hydrotest/config.yaml ./GraviTE_release/
         cp -r gravite_hydrotest/procedures ./GraviTE_release/
 
-    - name: Upload Final Package
-      uses: actions/upload-artifact@v4
+    - name: Zip Final Package
+      run: zip -r GraviTEHydroTest_Release.zip GraviTE_release/
+
+    - name: Update GitHub Release
+      uses: softprops/action-gh-release@v2
       with:
-        name: Release_pack
-        path: GraviTE_release/
+        tag_name: latest-dev
+        name: "GraviTE HydroTest - Latest Development Build"
+        body: |
+          GraviTE HydroTest release package
+          
+          **Last Actualization:** ${{ github.event.head_commit.message }} (Commit: `${{ github.sha }}`)
+        prerelease: true
+        files: GraviTEHydroTest_Release.zip
