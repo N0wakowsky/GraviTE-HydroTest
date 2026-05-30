@@ -18,8 +18,10 @@ jobs:
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build documentation
+      - name: Install system dependencies (libudev)
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev pkg-config
 
+      - name: Build documentation
         run: cargo doc --no-deps --document-private-items
         working-directory: ./gravite_hydrotest
 
