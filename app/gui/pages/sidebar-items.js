@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["act_control","memory_flash","proc_control","serial_control"]};

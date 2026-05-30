@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["Actuator","ActuatorsBuff","ActuatorsConfig","ActuatorsRegister","AppConfig","Phase","PhaseActuator","ProceduresConfig","RunConfig"]};

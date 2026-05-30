@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_path","main"],"mod":["app","config","gui"]};

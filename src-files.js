@@ -1,0 +1,2 @@
+createSrcSidebar('[["app",["",[["gui",[["pages",[],["act_control.rs","memory_flash.rs","mod.rs","proc_control.rs","serial_control.rs"]]],["components.rs","mod.rs"]]],["app.rs","config.rs","main.rs"]]]]');
+//{"start":19,"fragment_lengths":[181]}

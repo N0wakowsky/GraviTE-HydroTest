@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["SerialCommand","SerialStatus"],"fn":["get_avaiable_ports","spawn_serial_thread"],"struct":["SerialPage"]};
