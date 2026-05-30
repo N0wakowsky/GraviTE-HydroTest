@@ -1,3 +1,8 @@
+//! Komunikacja aplikacji z portem szeregowym UART.
+//!
+//! Zawiaduje wykrywaniem fizycznych portów podłączonych do komputera, parametryzacją
+//! prędkości przesyłu transmisji i wykonywaniem bezpośrednich operacji Input/Output.
+
 use std::{ thread, time::Duration};
 
 use egui::Color32;
@@ -23,6 +28,9 @@ pub enum SerialStatus {
     PortList(Vec<String>)
 }
 
+/// Skanuje system operacyjny w poszukiwaniu dostępnych fizycznych i wirtualnych portów COM.
+///
+/// Zwraca wektor zawierający wyłącznie nazwy znalezionych portów.
 fn get_avaiable_ports() -> Vec<String> {
     match serialport::available_ports() {
         Ok(ports) => ports.into_iter().map(|p| p.port_name).collect(),
@@ -30,6 +38,10 @@ fn get_avaiable_ports() -> Vec<String> {
     }
 }
 
+/// Otwiera niezależny wątek realizujący logikę komunikacyjną UART w trybie ciągłym.
+///
+/// Moduł nie blokuje aplikacji głównej, operując na krótkich timeoutach (ms). Weryfikuje
+/// też poprawność odpowiedzi (echo byte) z podłączonego mikrokontrolera.
 pub fn spawn_serial_thread(
     rx_command: mpsc::Receiver<SerialCommand>, 
     tx_status: mpsc::Sender<SerialStatus>, 
@@ -84,6 +96,7 @@ pub struct SerialPage {
 }
 
 impl SerialPage {
+    /// Inicjuje stronę GUI pozwalającą użytkownikowi na negocjację parametrów połączenia sprzętowego.
     pub fn new(ctx: &PageContext) -> Self {
         Self {
             tx_command: ctx.tx_serial.clone(),

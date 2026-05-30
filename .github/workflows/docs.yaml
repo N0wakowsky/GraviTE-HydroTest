@@ -1,0 +1,35 @@
+name: Deploy Rustdoc to GitHub Pages
+
+on:
+  push:
+    branches: ["develop_release"]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build documentation
+
+        run: cargo doc --no-deps --document-private-items
+        working-directory: ./gravite_hydrotest
+
+      - name: Add redirect to root index
+        run: |
+          echo '<meta http-equiv="refresh" content="0; url=gravite_hydrotest/index.html">' > ./gravite_hydrotest/target/doc/index.html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gravite_hydrotest/target/doc
+          force_orphan: true

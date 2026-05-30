@@ -1,3 +1,8 @@
+//! Uniwersalne komponenty, interfejsy widoków i zarządzanie stanem GUI.
+//!
+//! Definiuje podstawowe traity dla elementów interfejsu
+//! oraz wzorzec Factory pozwalający na łatwe dodawanie nowych podstron w programie.
+
 use std::sync::mpsc;
 
 use egui::{Color32, Context, Ui, Vec2};
@@ -14,12 +19,18 @@ use crate::gui::pages::proc_control::ProcedureCommand;
 use crate::gui::pages::proc_control::ProcedureStatus;
 
 
+/// Interfejs dla niestandardowych przycisków w interfejsie egui.
 pub trait ButtonTrait {
+    /// Zwraca etykietę wyświetlaną na przycisku.
     fn label(&self) -> &str;
+    /// Definiuje bieżący kolor wypełnienia przycisku, zależny np. od jego logicznego stanu.
     fn color(&self, ui: &egui::Ui) -> Color32;
+    /// Zwraca minimalny preferowany rozmiar (szerokość, wysokość) elementu na ekranie.
     fn size(&self) -> Vec2;
+    /// Logika wywoływana w momencie kliknięcia przycisku.  
     fn on_click(&mut self);
 
+    /// Domyślna implementacja renderowania i obsługi kliknięcia w oknie egui.
     fn render(&mut self, ui: &mut egui::Ui) -> egui::Response {
         let button = egui::Button::new(self.label())
             .fill(self.color(ui))
@@ -58,15 +69,18 @@ pub struct PageContext {
     pub tx_proc: mpsc::Sender<ProcedureCommand>,
 }
 
-
+/// Wspólny interfejs dla każdej podstrony aplikacji.
 pub trait PageTrait {
+    /// Główna metoda renderująca UI danej zakładki. Wywoływana przez App::update.
     fn update(&mut self, ctx: &Context, ui: &mut Ui, state: &AppState);
 }
 
-// factory
+/// Fabryka komponentów UI budująca zakładki według wariantu PageType.
 pub struct PageFactory;
 
 impl PageFactory {
+    /// Tworzy nową instancję strony implementującą trait PageTrait 
+    /// w oparciu o podany kontekst strony (konfiguracja i kanały MPSC).
     pub fn create(
         page_type: PageType, 
         ctx: &PageContext

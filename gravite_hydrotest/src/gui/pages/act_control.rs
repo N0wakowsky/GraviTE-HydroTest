@@ -1,3 +1,9 @@
+//! Widok ręcznego sterowania elementami wykonawczymi układu hydraulicznego.
+//!
+//! Prezentuje moduły wyciągnięte z konfiguracji, tworząc interaktywne przyciski
+//! reagujące na kliki poprzez wysyłanie odpowiednich kodów komend na magistralę UART.
+
+
 use std::sync::mpsc;
 
 use egui::{Color32, Vec2};
@@ -22,6 +28,7 @@ struct ActButton {
 }
 
 impl ActButton {
+    /// Generuje i zwraca nową instancję przycisku dla pojedynczego elementu.
     fn new(actuator: Actuator, act_register: ActuatorsRegister, tx_serial: mpsc::Sender<SerialCommand>) -> Self {
         let label = actuator.name;
 
@@ -57,10 +64,11 @@ struct ActModule {
 }
 
 impl ActModule {
+    /// Inicjalizuje nową logiczną grupę (moduł) przycisków.
     pub fn new(name: String) -> Self {
         Self { name, buttons: Vec::new() }
     }
-
+    /// Dodaje nowy przycisk na listę do wyrenderowania w sekcji modułu.
     fn add_button(&mut self, button: Box<ActButton>) {
         self.buttons.push(button);
     }
@@ -73,6 +81,7 @@ pub struct ActPage {
 }
 
 impl ActPage {
+    /// Tworzy stronę ręcznego sterowania na podstawie dostępnej konfiguracji.
     pub fn new(ctx: &PageContext) -> Self {
 
         let mut modules = Vec::new();     

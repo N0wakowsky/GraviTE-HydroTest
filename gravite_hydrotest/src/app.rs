@@ -1,3 +1,9 @@
+//! Główny rdzeń logiki aplikacji.
+//! 
+//! Moduł ten łączy poszczególne podstrony GUI, zarządza stanem aplikacji
+//! oraz komunikuje się z pobocznymi wątkami roboczymi (UART, Flash, Procedury).
+
+
 use std::collections::HashMap;
 use std::sync::mpsc;
 use crate::gui::components::AppState;
@@ -15,6 +21,7 @@ use crate::gui::pages::proc_control::spawn_proc_thread;
 use crate::gui::components::PageContext;
 
 
+/// Struktura reprezentująca całą aplikację i przechowująca jej globalny stan.
 pub struct App {
     current_page_type: PageType,
     pages: HashMap<PageType, Box<dyn PageTrait>>,
@@ -26,6 +33,11 @@ pub struct App {
 }
 
 impl App {
+    /// Tworzy nową instancję aplikacji.
+    ///
+    /// Konfiguruje współdzielony rejestr aktuatorów, uruchamia wątki odpowiedzialne za 
+    /// komunikację poprzez port szeregowy, programowanie mikrokontrolera oraz kontrolę procedur testowych, 
+    /// a także buduje wszystkie ekrany GUI z wykorzystaniem wzorca Factory.
     pub fn new(config: AppConfig, ctx: egui::Context) -> Self {
         let act_register = ActuatorsRegister::from_config(&config);
 
@@ -79,6 +91,10 @@ impl App {
 }
 
 impl eframe::App for App {
+    /// Główna pętla renderująca GUI.
+    ///
+    /// Aktualizuje stany pochodzące z zewnętrznych wątków i renderuje odpowiedni widok
+    /// bocznego panelu nawigacyjnego oraz centralnego panelu z wybraną zakładką.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         while let Ok(msg) = self.rx_ser_stat.try_recv() {
             match msg {

@@ -1,4 +1,10 @@
-// #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+//! Punkt uruchomienia aplikacji GraviTE HydroTest.
+//!
+//! Moduł odpowiada za załadowanie konfiguracji z plików YAML
+//! oraz uruchomienie głównego okna aplikacji.
+
+
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::{env, path::PathBuf};
 
@@ -11,6 +17,10 @@ mod gui;
 mod config;
 mod app;
 
+/// Pobiera bezwzględną ścieżkę do katalogu, w którym znajduje się plik wykonywalny aplikacji.
+///
+/// # Panics
+/// Funkcja panikuje, jeśli system operacyjny nie zwróci ścieżki do aktualnie wykonywanego procesu.
 fn get_path() -> PathBuf {
     let mut exe_path = env::current_exe().expect("Failed to get exe path");
 
@@ -18,6 +28,11 @@ fn get_path() -> PathBuf {
     exe_path
 }
 
+
+/// Główna funkcja programu uruchamiająca interfejs graficzny.
+///
+/// Ładuje plik `config.yaml` oraz procedury z folderu `procedures`, a następnie
+/// inicjalizuje środowisko `eframe` i przekazuje kontrolę do struktury `App`.
 fn main() -> Result<(), eframe::Error> {
     let base = get_path();
     let config_path = base.join("config.yaml");

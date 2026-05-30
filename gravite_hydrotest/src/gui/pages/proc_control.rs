@@ -1,3 +1,9 @@
+//! Logika wykonywania zautomatyzowanych procedur i faz testów sprzętowych.
+//!
+//! Zarządza czasem, przekazywaniem komend wykonawczych aktuatorom oraz kontrolą
+//! pętli iteracyjnych bazując na skryptach odczytanych z plików YAML.
+
+
 use std::{thread, time::Duration};
 
 use egui::{Color32, Vec2};
@@ -34,6 +40,7 @@ struct ProcButton {
 }
 
 impl ProcButton {
+    /// Buduje przycisk dedykowany do zarządzania cyklem procedury (Start/Abort).
     fn new(instruction: ProcedureCommand, tx_proc: mpsc::Sender<ProcedureCommand>) -> Self {
         let (label, color) = match instruction {
             ProcedureCommand::Start(_) => ("Start".to_string(), Color32::from_rgb(0, 180, 0)),
@@ -48,6 +55,8 @@ impl ProcButton {
             tx_proc
         }
     }
+
+    /// Przełącza polecenie przypisane pod kliknięciem przycisku.
     fn set_instruction(&mut self, instruction: ProcedureCommand) {
         self.instruction = instruction;
     }
@@ -69,6 +78,12 @@ impl ButtonTrait for ProcButton {
     }
 }
 
+
+/// Generuje asynchroniczny wątek maszyny stanów procedury testowej.
+///
+/// Wątek ten nasłuchuje komend uruchomieniowych, iteruje po fazach zdefiniowanych w
+/// pliku konfiguracyjnym YAML, usypia na zadany czas fazy i instruuje UART o załączeniu
+/// niezbędnych elementów wykonawczych układu hydraulicznego.
 pub fn spawn_proc_thread(
     rx_cmd: mpsc::Receiver<ProcedureCommand>,
     tx_stat: mpsc::Sender<ProcedureStatus>,
@@ -140,6 +155,7 @@ pub struct ProcPage {
 }
 
 impl ProcPage {
+    /// Inicjalizuje stronę obsługi paneli procedur badawczych z wykorzystaniem dostępnej konfiguracji.
     pub fn new(ctx: &PageContext) -> Self {
         Self { 
             start_button: ProcButton::new(ProcedureCommand::Start(0), ctx.tx_proc.clone()), 

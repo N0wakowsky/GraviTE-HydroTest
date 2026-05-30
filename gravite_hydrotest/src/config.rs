@@ -1,11 +1,8 @@
-/* 
-Config file is specified to derive:
-    - function returning configuration specification for actuators GUI builder
+//! System zarządzania konfiguracją.
+//!
+//! Odpowiada za deserializację z plików YAML, parsując
+//! konfiguracje aktuatorów oraz definicje kroków dla zautomatyzowanych procedur testowych.
 
-    AppConfig derives:
-        - contructor: list of modules (ButtonModules) containing lists of buttons (Actuator) with its coresponding name, code and state
-
-*/
 use std::{fs::read_to_string, sync::{Arc, mpsc::Sender}};
 use egui::mutex::Mutex;
 
@@ -78,10 +75,16 @@ pub struct Phase {
 
 
 impl AppConfig {
+    /// Inicjalizuje pustą konfigurację aplikacji.
     pub fn new() -> Self {
         Self { actuators: Vec::new(), procedures: Vec::new() }
     }
 
+    /// Ładuje i parsuje konfigurację aktuatorów z pliku YAML.
+    ///
+    /// # Errors
+    /// Zwraca błąd, jeśli plik nie istnieje, nie ma do niego dostępu lub zawartość
+    /// nie jest poprawnym formatem YAML zgodnym ze strukturą.
     pub fn load_act_config<P: AsRef<std::path::Path>>(&mut self, path: P) -> Result<(), Box<dyn std::error::Error>> {
         let contents: String = read_to_string(path)?;
         let parsed: ActuatorsBuff = serde_yaml::from_str(&contents)?;
@@ -89,6 +92,12 @@ impl AppConfig {
         Ok(())
     }
 
+    /// Przeszukuje podany katalog i ładuje wszystkie pliki procedur w formacie YAML.
+    ///
+    /// Każdy poprawnie sparsowany plik zostaje dodany do listy procedur.
+    ///
+    /// # Errors
+    /// Zwraca błąd odczytu systemu plików lub błąd parsowania deserializacji YAML.
     pub fn load_procedure_config<P: AsRef<std::path::Path>>(&mut self, path: P) -> Result<(), Box<dyn std::error::Error>> {
         if let Ok(entries) = std::fs::read_dir(path) {
             for entry in entries.flatten() {
@@ -104,6 +113,9 @@ impl AppConfig {
         Ok(())
     }
 
+    /// Zwraca spłaszoną (flat) listę wszystkich aktuatorów ze wszystkich zdefiniowanych modułów.
+    ///
+    /// Przydatne przy inicjalizacji globalnego rejestru stanów peryferiów.
     // helper function for ActuatorsRegister
     pub fn actuators_flat(&self) -> Vec<Actuator> {
         self.actuators
@@ -120,17 +132,19 @@ impl AppConfig {
 }
 
 
-// Global structure for actuators states managing
+/// Globalna struktura thread-safe, przechowująca bieżące stany logiczne aktuatorów.
 #[derive(Clone)]
 pub struct ActuatorsRegister {
     pub items: Arc<Mutex<Vec<Actuator>>>
 }
 
 impl ActuatorsRegister {
+    /// Inicjalizuje rejestr aktuatorów na podstawie wczytanej konfiguracji AppConfig.
     pub fn from_config(config: &AppConfig) -> Self {
         Self { items: Arc::new(Mutex::new(config.actuators_flat())) }
     }
 
+    /// Przełącza flagę aktywności aktuatora na podstawie jego kodu heksadecymalnego (toggle).
     pub fn toggle_state(&self, code: u8) {
         let mut items = self.items.lock();
         if let Some(actuator) = items.iter_mut().find(|a| a.code == code) {
@@ -138,6 +152,9 @@ impl ActuatorsRegister {
         }
     }
 
+    /// Iteruje po wszystkich urządzeniach i jeśli któreś jest aktywne - wysyła komendę wyłączającą.
+    ///
+    /// Używane na przykład do bezpiecznego zresetowania stanu systemu przed rozpoczęciem nowej fazy.
     pub fn reset_all(&self, tx_serial: &Sender<SerialCommand>) {
         let mut items = self.items.lock();
         for item in items.iter_mut() {
@@ -147,6 +164,7 @@ impl ActuatorsRegister {
         }
     }
 
+    /// Aktywuje określony aktuator, szukając go po jego nazwie określonej przez plik config.yaml.
     pub fn set_active_by_name(&self, name: &String, tx_serial: &Sender<SerialCommand>) {
         let code = {
             let items = self.items.lock();

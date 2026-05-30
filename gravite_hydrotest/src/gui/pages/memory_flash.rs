@@ -1,3 +1,8 @@
+//! Moduł wgrywania oprogramowania (Flashowania) do mikrokontrolera STM32.
+//!
+//! Wykorzystuje bibliotekę probe-rs do fizycznej komunikacji po SWD w osobnym wątku.
+//! Integruje system śledzenia postępów operacji z paskiem ładowania GUI.
+
 use std::path::PathBuf;
 use std::sync::mpsc;
 use std::thread;
@@ -28,6 +33,16 @@ pub enum FlashStatus {
     Error(String),
 }
 
+
+/// Generuje odseparowany od GUI wątek do obsługi interakcji z programatorem (ST-Link).
+///
+/// Funkcja łączy się z pierwszym odnalezionym programatorem, ładuje plik .elf i asynchronicznie 
+/// raportuje postęp przesyłania paczek danych wprost do kanału MPSC stanu GUI.
+///
+/// # Parametry
+/// * `rx_command` - Kanał obierający komendy, np. żądanie startu z podaną ścieżką do pliku.
+/// * `tx_status`  - Kanał raportujący zmiany stanu, procenty ukończenia i błędy do aplikacji głównej.
+/// * `ctx`        - Referencja kontekstu egui, w celu przerysowania (repaint) ekranu po każdej zmianie stanu.
 pub fn spawn_flash_thread(
     rx_command: mpsc::Receiver<FlashCommand>,
     tx_status: mpsc::Sender<FlashStatus>,
@@ -113,6 +128,7 @@ pub struct FlashPage {
 }
 
 impl FlashPage {
+    /// Inicjalizuje nową stronę GUI do konfiguracji i nadzoru wgrywania programu na mikrokontroler.
     pub fn new(ctx: &PageContext) -> Self {
         Self {
             tx_command: ctx.tx_flash.clone(),
