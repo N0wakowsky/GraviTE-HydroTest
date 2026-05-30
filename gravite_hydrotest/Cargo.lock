@@ -3,19 +3,6 @@
 version = 4
 
 [[package]]
-name = "GraviTEHydroTest"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "egui",
- "probe-rs",
- "rfd",
- "serde",
- "serde_yaml",
- "serialport",
-]
-
-[[package]]
 name = "ab_glyph"
 version = "0.2.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -198,6 +185,19 @@ name = "anyhow"
 version = "1.0.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
+
+[[package]]
+name = "app"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "probe-rs",
+ "rfd",
+ "serde",
+ "serde_yaml",
+ "serialport",
+]
 
 [[package]]
 name = "arboard"

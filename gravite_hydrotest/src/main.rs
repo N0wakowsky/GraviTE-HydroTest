@@ -1,3 +1,7 @@
+//! # GraviTE HydroTest
+//! 
+//! Oficjalna dokumentacja techniczna aplikacji **GraviTE HydroTest**.
+
 //! Punkt uruchomienia aplikacji GraviTE HydroTest.
 //!
 //! Moduł odpowiada za załadowanie konfiguracji z plików YAML

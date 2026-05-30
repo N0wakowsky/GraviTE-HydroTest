@@ -27,8 +27,8 @@ jobs:
 
       - name: Add redirect to root index
         run: |
-          echo '<meta http-equiv="refresh" content="0; url=gravite_hydrotest/index.html">' > ./gravite_hydrotest/target/doc/index.html
-
+          echo '<meta http-equiv="refresh" content="0; url=app/index.html">' > ./gravite_hydrotest/target/doc/index.html
+          
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
