@@ -40,7 +40,7 @@ jobs:
         path: ./GraviTE_release
 
     - name: Copy STM32 ELF File
-      run: cp gravite_hydrotest_stm32/build/Debug/GraviTE_test.elf ./GraviTE_release/projekt_stm32.elf
+      run: cp gravite_hydrotest_stm32/build/Debug/GraviTE_test.elf ./GraviTE_release/GraviTE_test.elf
 
     - name: Copy Configuration and Procedures
       run: |
