@@ -22,7 +22,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows-bin
-        path: gravite_hydrotest/target/release/GraviTEHydroTest.exe
+        path: gravite_hydrotest/target/release/app.exe
 
   package-release:
     runs-on: ubuntu-latest
@@ -38,6 +38,9 @@ jobs:
       with:
         name: windows-bin
         path: ./GraviTE_release
+
+    - name: Rename Binary for Release
+      run: mv ./GraviTE_release/app.exe ./GraviTE_release/GraviTEHydroTest.exe
 
     - name: Copy STM32 ELF File
       run: cp gravite_hydrotest_stm32/build/Debug/GraviTE_test.elf ./GraviTE_release/GraviTE_test.elf
